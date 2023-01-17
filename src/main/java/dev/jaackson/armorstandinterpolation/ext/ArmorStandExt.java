@@ -1,11 +1,12 @@
 package dev.jaackson.armorstandinterpolation.ext;
 
 import com.mojang.math.Constants;
-import com.mojang.math.Quaternion;
-import com.mojang.math.Vector3d;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.core.Rotations;
+import org.joml.Quaterniond;
+import org.joml.Quaternionf;
+import org.joml.Vector3d;
 
 public interface ArmorStandExt {
     Rotations getPrevHeadPose();
@@ -22,9 +23,9 @@ public interface ArmorStandExt {
 
     /**
      * Interpolates a {@link ModelPart} between a start and end euler.
-     * <p>This method works by converting the eulers into a {@link Quaternion} then using a slerp function to
+     * <p>This method works by converting the eulers into a {@link Quaternionf} then using a slerp function to
      * interpolate between the two eulers.
-     *
+     * <p>
      * The rotation is then converted back to an euler and applied to the {@link ModelPart}.
      *
      * @param part  The part to interpolate.
@@ -40,7 +41,7 @@ public interface ArmorStandExt {
             );
             return;
         }
-        Quaternion result = slerp(
+        Quaternionf result = slerp(
                 ArmorStandExt.fromEuler(start.getX(), start.getY(), start.getZ()),
                 ArmorStandExt.fromEuler(end.getX(), end.getY(), end.getZ()),
                 Minecraft.getInstance().getFrameTime()
@@ -54,11 +55,11 @@ public interface ArmorStandExt {
         );
     }
 
-    private static Quaternion slerp(Quaternion from, Quaternion to, double delta) {
+    private static Quaternionf slerp(Quaternionf from, Quaternionf to, double delta) {
         if (from.equals(to))
             return from;
 
-        double dot = from.i() * to.i() + from.j() * to.j() + from.k() * to.k() + from.r() * to.r();
+        double dot = from.dot(to);
         double s1;
         if (dot < 0.0) {
             s1 = -1.0;
@@ -76,15 +77,15 @@ public interface ArmorStandExt {
             s0 = Math.sin((1.0 - delta) * theta) / invSinTheta;
             s1 = Math.copySign(Math.sin(delta * theta) / invSinTheta, s1);
         }
-        return new Quaternion(
-                (float) (s0 * from.i() + s1 * to.i()),
-                (float) (s0 * from.j() + s1 * to.j()),
-                (float) (s0 * from.k() + s1 * to.k()),
-                (float) (s0 * from.r() + s1 * to.r())
+        return new Quaternionf(
+                (float) (s0 * from.x + s1 * to.x),
+                (float) (s0 * from.y + s1 * to.y),
+                (float) (s0 * from.z + s1 * to.z),
+                (float) (s0 * from.w + s1 * to.w)
         );
     }
 
-    private static Quaternion fromEuler(double pitch, double yaw, double roll) {
+    private static Quaternionf fromEuler(double pitch, double yaw, double roll) {
         double x = (Constants.DEG_TO_RAD * pitch) / 2.0;
         double y = (Constants.DEG_TO_RAD * yaw) / 2.0;
         double z = (Constants.DEG_TO_RAD * roll) / 2.0;
@@ -94,7 +95,7 @@ public interface ArmorStandExt {
         double s1 = Math.sin(x);
         double s2 = Math.sin(y);
         double s3 = Math.sin(z);
-        return new Quaternion(
+        return new Quaternionf(
                 (float) fuzzyFix(s1 * c2 * c3 - c1 * s2 * s3),
                 (float) fuzzyFix(c1 * s2 * c3 + s1 * c2 * s3),
                 (float) fuzzyFix(c1 * c2 * s3 - s1 * s2 * c3),
@@ -108,11 +109,11 @@ public interface ArmorStandExt {
         return value;
     }
 
-    private static Vector3d toEuler(Quaternion quat) {
-        double x = quat.i();
-        double y = quat.j();
-        double z = quat.k();
-        double w = quat.r();
+    private static Vector3d toEuler(Quaternionf quat) {
+        double x = quat.x;
+        double y = quat.y;
+        double z = quat.z;
+        double w = quat.w;
         double x2 = x + x, y2 = y + y, z2 = z + z;
         double xx = x * x2, xy = x * y2, xz = x * z2;
         double yy = y * y2, yz = y * z2, zz = z * z2;
