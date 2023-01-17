@@ -4,7 +4,6 @@ import com.mojang.math.Constants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.core.Rotations;
-import org.joml.Quaterniond;
 import org.joml.Quaternionf;
 import org.joml.Vector3d;
 
